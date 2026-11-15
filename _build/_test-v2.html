@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>v2</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'V2 ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), d;
+  var steps = [], i = 0;
+
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+  function mode(m) { d.querySelector('.mode[data-mode="' + m + '"]').click(); }
+  function units() { return d.querySelectorAll('.u').length; }
+  function head(n) {
+    return Array.prototype.slice.call(d.querySelectorAll('.u .hz')).slice(0, n)
+      .map(function (e) { return e.textContent; }).join('');
+  }
+  function prog() { return d.getElementById('m-progress').textContent; }
+  function curLetter() {
+    var c = d.querySelector('.u.is-cur .py .cur');
+    return c ? c.textContent : null;
+  }
+
+  function run() {
+    while (i < steps.length) {
+      var r = steps[i]();
+      i++;
+      if (r === 'wait') { setTimeout(run, 60); return; }
+    }
+    say({ t: 'DONE' });
+  }
+
+  setTimeout(function () {
+    d = f.contentDocument;
+
+    // 1. 四字模式：一次只显示一条成语
+    steps.push(function () {
+      mode('word4');
+      say({ t: 'word4-one', units: units(), head: head(4), prog: prog(), hint: d.getElementById('mode-hint').textContent.slice(0, 30) });
+    });
+
+    // 2. 打完这 4 个字，应该自动换下一条成语
+    steps.push(function () {
+      var first = head(4);
+      var g = 0;
+      while (g++ < 40) {
+        var c = curLetter();
+        if (!c) break;
+        key(c);
+      }
+      var now = head(4);
+      say({ t: 'word4-next', was: first, now: now, changed: first !== now, units: units(), prog: prog() });
+    });
+
+    // 3. 立即跳转：完成后不需要等，直接能打（上一步已经验证能连续打）
+    steps.push(function () {
+      var before = head(4);
+      var c = curLetter();
+      key(c);
+      say({ t: 'no-wait', typing: !!curLetter(), sameIdiom: head(4) === before });
+    });
+
+    // 4. 跨字退格：单字模式打满 2 个字，然后连按退格
+    steps.push(function () {
+      mode('char');
+      var g = 0;
+      while (g++ < 20) {
+        var c = curLetter();
+        if (!c) break;
+        key(c);
+        if (d.querySelectorAll('.u.is-done').length >= 2) break;
+      }
+      say({ t: 'two-done', done: d.querySelectorAll('.u.is-done').length, prog: prog(), at: curLetter() });
+    });
+
+    steps.push(function () {
+      // 连按 6 次退格，应当越过字边界往回删
+      var log = [];
+      for (var n = 0; n < 6; n++) {
+        key('Backspace');
+        var cur = d.querySelector('.u.is-cur');
+        log.push({
+          hz: cur ? cur.querySelector('.hz').textContent : '无',
+          at: curLetter(),
+          done: d.querySelectorAll('.u.is-done').length,
+          prog: prog()
+        });
+      }
+      say({ t: 'backspace-walk', log: log });
+    });
+  }, 400);
+
+  setTimeout(function () { run(); }, 700);
+});
+</script>
+</body></html>

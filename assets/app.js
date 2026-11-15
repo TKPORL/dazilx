@@ -9,7 +9,8 @@
   var IDIOMS = window.DAZI_IDIOMS || [];
   var ARTS = window.DAZI_ARTICLES || [];
 
-  var PAGE = { char: 40, word: 12, word4: 10, article: 1, endless: 40 };
+  // 四字模式一次只出一条成语，打完立即换下一条
+  var PAGE = { char: 40, word: 12, word4: 1, article: 1, endless: 40 };
   var MODE_NAME = { char: '单字', word: '词语', word4: '四字', article: '文章', endless: '无限' };
   var LS = {
     rec: 'dazi.records',
@@ -146,7 +147,7 @@
   function modeHint() {
     if (S.mode === 'char') return '随机取 ' + PAGE.char + ' 个常用字 · 共 ' + CHARS.length + ' 字';
     if (S.mode === 'word') return '高频双字词 · 词库 ' + WORDS.length + ' 个 · 每组 ' + PAGE.word + ' 词';
-    if (S.mode === 'word4') return '常用四字成语 · 词库 ' + IDIOMS.length + ' 条 · 每组 ' + PAGE.word4 + ' 条';
+    if (S.mode === 'word4') return '常用四字成语 · 词库 ' + IDIOMS.length + ' 条 · 一次一条，打完自动换';
     if (S.mode === 'endless') return '一直往下打 · 打完自动续 · 不会停';
     var a = ARTS[S.artCur < 0 ? 0 : S.artCur];
     return '短文跟打 · 共 ' + ARTS.length + ' 篇 · 随机选 · 当前《' + a.t + '》';
@@ -183,7 +184,9 @@
 
   function renderPage() {
     elLines.innerHTML = '';
-    elLines.className = 'lines' + (isWordMode() ? ' is-word' : '');
+    elLines.className = 'lines'
+      + (isWordMode() ? ' is-word' : '')
+      + (S.mode === 'word4' ? ' is-single' : '');
     unitEls = [];
     var frag = document.createDocumentFragment();
     var group = null, last = null;
@@ -243,10 +246,14 @@
 
   function markCur() {
     for (var i = 0; i < unitEls.length; i++) {
-      unitEls[i].classList.remove('is-cur');
-      // 打错过的字保持 is-wrong，别再叠一个 is-done 上去
-      if (i < S.idx && !unitEls[i].classList.contains('is-wrong')) {
-        unitEls[i].classList.add('is-done');
+      var el = unitEls[i];
+      el.classList.remove('is-cur');
+      if (i < S.idx) {
+        // 打错过的字保持 is-wrong，别再叠一个 is-done 上去
+        if (!el.classList.contains('is-wrong')) el.classList.add('is-done');
+      } else {
+        // 退格会往回走，后面的字要恢复成没打过的样子
+        el.classList.remove('is-done', 'is-wrong');
       }
     }
     var cur = unitEls[S.idx];
@@ -380,13 +387,7 @@
     if (e.key === 'Escape') { e.preventDefault(); restart(); return; }
     if (e.key === 'Backspace') {
       e.preventDefault();
-      if (S.finished) return;
-      if (S.pos > 0) {
-        S.pos--;
-        paintUnit(S.idx);
-        paintNextKey();
-        renderMeters();
-      }
+      backspace();
       return;
     }
     if (e.key === 'Tab') return;
@@ -398,6 +399,33 @@
       else return;
     }
     press(e.key.toLowerCase());
+  }
+
+  // 退格：拼音是连成一串的，一个字删到开头会接着删上一个字的末尾
+  function backspace() {
+    if (S.finished) return;
+
+    if (S.pos > 0) {
+      S.pos--;
+      paintUnit(S.idx);
+      paintNextKey();
+      renderMeters();
+      return;
+    }
+
+    // 已经在这个字的第一个字母上了，往回找上一个有拼音的字
+    var i = S.idx - 1;
+    while (i >= 0 && !S.items[i].p) i--;
+    if (i < 0) return;
+
+    S.doneChar--;
+    S.idx = i;
+    S.pos = S.items[i].p.length - 1;   // 光标落在最后一个字母上，等于把它删掉
+
+    markCur();
+    paintUnit(i);
+    paintNextKey();
+    renderMeters();
   }
 
   function press(ch) {
@@ -479,21 +507,18 @@
   }
 
   function finish() {
-    S.finished = true;
     var ms = elapsed();
     var min = Math.max(ms, 3000) / 60000;
     var sp = Math.round(S.doneChar / min);
     var acc = S.keys ? Math.round(S.good / S.keys * 100) : 100;
 
     sndDone();
-    pushRecord(sp, acc, ms);
-    renderMeters();
+    // 四字模式是连着打，每 4 个字记一条会让记录全是噪音，跳过
+    if (S.mode !== 'word4') pushRecord(sp, acc, ms);
+    toast('完成 · ' + sp + ' 字/分 · 正确率 ' + acc + '%');
 
-    setTimeout(function () {
-      toast('完成 · ' + sp + ' 字/分 · 正确率 ' + acc + '%');
-    }, 120);
-
-    setTimeout(function () { newRound(); }, 1500);
+    // 立刻进下一组，不等提示消失，手不用停
+    newRound();
   }
 
   /* ---------------- 记录 ---------------- */

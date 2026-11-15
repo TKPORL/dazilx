@@ -103,7 +103,7 @@ def build_chars(py_table):
 
 
 # ---------- 高频双字词 ----------
-def build_words(py_table, limit=860):
+def build_words(py_table, limit=3000):
     cand = []
     src = ensure(JIEBA_URL, 'jieba_dict.txt')
     with io.open(src, encoding='utf-8') as f:

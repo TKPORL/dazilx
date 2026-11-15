@@ -6,6 +6,7 @@
   --ok:#2f6f5f; --ok-bg:rgba(47,111,95,.10);
   --err:#bb3a2c; --err-bg:rgba(187,58,44,.11);
   --half:rgba(28,30,29,.035);
+  --cur:rgba(28,30,29,.062);
   --shadow:0 1px 2px rgba(28,30,29,.04),0 8px 24px -12px rgba(28,30,29,.16);
   --f-ui:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   --f-mono:"JetBrains Mono","Cascadia Mono",Consolas,ui-monospace,monospace;
@@ -18,6 +19,7 @@
   --ok:#6fb89f; --ok-bg:rgba(111,184,159,.12);
   --err:#e07060; --err-bg:rgba(224,112,96,.13);
   --half:rgba(230,228,222,.028);
+  --cur:rgba(230,228,222,.075);
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px -14px rgba(0,0,0,.7);
 }
 *{box-sizing:border-box}
@@ -110,16 +112,21 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 .lines.is-word{gap:8px 14px}
 .w{display:flex;flex-wrap:nowrap}
+/* 四字模式一次只有一条，放大到能当视觉焦点，不然 4 个字悬在大片空白里太单薄 */
+.lines.is-single{gap:0 10px}
+.lines.is-single .u{min-width:76px;padding:38px 8px 10px}
+.lines.is-single .u .hz{font-size:50px}
+.lines.is-single .u .py{font-size:19px;top:6px}
 /* 单个字：拼音绝对定位浮在字上方，不参与宽度计算，字距因此完全均匀 */
 .u{
   position:relative;display:flex;align-items:flex-end;justify-content:center;
-  padding:26px 5px 6px;border-radius:5px;min-width:46px;
+  padding:30px 5px 6px;border-radius:5px;min-width:56px;
   transition:background .12s ease;
 }
 .u .py{
   position:absolute;top:4px;left:50%;transform:translateX(-50%);
-  font-family:var(--f-mono);font-size:12px;line-height:1.2;
-  letter-spacing:.02em;color:var(--ink-2);white-space:nowrap;
+  font-family:var(--f-mono);font-size:15px;line-height:1.2;
+  letter-spacing:.01em;color:var(--ink-2);white-space:nowrap;
   transition:color .1s;
 }
 .u .py em{font-style:normal}
@@ -146,12 +153,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .u.is-done .py{opacity:.55}
 /* 当前字 */
 .u.is-cur{
-  background:var(--half);
+  background:var(--cur);
   box-shadow:inset 0 -2px 0 var(--ink);
 }
 .u.is-cur .hz{font-weight:600}
 /* 标点：不占拼音位，收窄 */
-.u.is-punct{min-width:0;padding:26px 3px 6px;opacity:.4}
+.u.is-punct{min-width:0;padding:30px 3px 6px;opacity:.4}
 .u.is-punct .hz{font-size:27px}
 /* 打错 */
 .u.is-miss{animation:miss .3s ease}
@@ -268,10 +275,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .modes{padding:8px 14px}
   .mode-hint{display:none}
   .paper{padding:20px 16px}
-  .u{min-width:42px;padding:22px 5px 5px}
+  .u{min-width:48px;padding:26px 4px 5px}
   .u .hz{font-size:26px}
-  .u .py{font-size:11px;top:3px}
-  .u.is-punct{padding:22px 2px 5px}
+  .u .py{font-size:13px;top:3px}
+  .u.is-punct{padding:26px 2px 5px}
   .u.is-punct .hz{font-size:20px}
   /* 手机没有物理键盘，虚拟键盘只是占地方 */
   .kbdwrap{display:none}

@@ -19,7 +19,7 @@ IDIOM_URL = 'https://raw.githubusercontent.com/pwxcoo/chinese-xinhua/master/data
 JIEBA_URL = 'https://raw.githubusercontent.com/fxsjy/jieba/master/jieba/dict.txt'
 PINYIN_URL = 'https://raw.githubusercontent.com/mozillazg/pinyin-data/master/pinyin.txt'
 
-LIMIT = 1000
+LIMIT = 3000
 
 TONE_MAP = {
     'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a',
