@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>idle</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'IDLE ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), d;
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+  function at() { var c = d.querySelector('.u.is-cur .py .cur'); return c ? c.textContent : null; }
+  function bad() {
+    var py = d.querySelector('.u.is-cur .py');
+    return py ? Array.prototype.map.call(py.querySelectorAll('.bad'), function (e) { return e.textContent; }).join('') : '';
+  }
+  function prog() { return d.getElementById('m-progress').textContent; }
+
+  setTimeout(function () {
+    d = f.contentDocument;
+
+    // 1. 打错一个字母 → 应该有红标
+    var a = at();
+    key(a === 'a' ? 'z' : 'a');
+    say({ t: 'wrong', at: a, badNow: bad(), prog: prog() });
+
+    // 2. 退格 → 红标应该消失
+    key('Backspace');
+    say({ t: 'after-backspace', badNow: bad(), at: at(), prog: prog() });
+
+    // 3. 停顿 5 秒（虚拟时间下等价于很久），之后还能不能打
+    setTimeout(function () {
+      var before = prog();
+      var c = at();
+      key(c);
+      say({ t: 'after-idle-5s', before: before, after: prog(), stillWorking: prog() !== before || at() !== c });
+
+      // 4. 再停 10 秒，再打
+      setTimeout(function () {
+        var b2 = prog();
+        var c2 = at();
+        key(c2);
+        say({ t: 'after-idle-10s', before: b2, after: prog(), stillWorking: at() !== c2 });
+      }, 10000);
+    }, 5000);
+  }, 400);
+});
+</script>
+</body></html>

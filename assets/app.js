@@ -401,12 +401,21 @@
     press(e.key.toLowerCase());
   }
 
+  // 删掉一个字母的同时，把它身上记的"打过错"也一起清掉，
+  // 不然字母都删了还留着红标，看着像没删干净
+  function clearErrAt(it, pos) {
+    if (!it || !it.errs || !it.errs.length) return;
+    var k = it.errs.indexOf(pos);
+    if (k >= 0) it.errs.splice(k, 1);
+  }
+
   // 退格：拼音是连成一串的，一个字删到开头会接着删上一个字的末尾
   function backspace() {
     if (S.finished) return;
 
     if (S.pos > 0) {
       S.pos--;
+      clearErrAt(S.items[S.idx], S.pos);
       paintUnit(S.idx);
       paintNextKey();
       renderMeters();
@@ -421,6 +430,7 @@
     S.doneChar--;
     S.idx = i;
     S.pos = S.items[i].p.length - 1;   // 光标落在最后一个字母上，等于把它删掉
+    clearErrAt(S.items[i], S.pos);
 
     markCur();
     paintUnit(i);
@@ -717,11 +727,6 @@
 
     // 初始音效按钮状态
     $('btn-sound').classList.toggle('is-active', S.sound);
-
-    // 失焦暂停
-    window.addEventListener('blur', function () {
-      if (S.t0 && !S.paused && !S.finished) togglePause();
-    });
 
     window.addEventListener('beforeunload', function () {
       if (tick) clearInterval(tick);
