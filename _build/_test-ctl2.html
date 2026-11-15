@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>ctl2</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'CTL2 ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), d;
+  function txt(s) { var e = d.querySelector(s); return e ? e.textContent : ''; }
+  function head(n) {
+    return Array.prototype.slice.call(d.querySelectorAll('.u .hz')).slice(0, n)
+      .map(function (e) { return e.textContent; }).join('');
+  }
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+  function mode(m) { d.querySelector('.mode[data-mode="' + m + '"]').click(); }
+
+  setTimeout(function () {
+    d = f.contentDocument;
+
+    // 1 单字随机性：两次进入单字模式，取到的字不同
+    var a1 = head(10);
+    d.getElementById('btn-next').click();
+    var a2 = head(10);
+    say({ t: 'char-random', a1: a1, a2: a2, diff: a1 !== a2, prog: txt('#m-progress') });
+
+    // 2 四字模式
+    mode('word4');
+    say({ t: 'word4', prog: txt('#m-progress'), units: d.querySelectorAll('.u').length, groups: d.querySelectorAll('.w').length, head: head(8), hint: txt('#mode-hint').slice(0, 24) });
+
+    // 3 文章随机：连续两次进入文章模式，标题不同
+    mode('article');
+    var h1 = txt('#mode-hint');
+    mode('char');
+    mode('article');
+    var h2 = txt('#mode-hint');
+    say({ t: 'article-random', h1: h1.slice(-8), h2: h2.slice(-8), diff: h1 !== h2 });
+
+    // 4 打错即跳过
+    mode('char');
+    var before = txt('#m-progress');
+    key('z'); // 第一键必错（首字拼音不会是 z 开头，除非运气）
+    setTimeout(function () {
+      say({ t: 'miss-skip', before: before, after: txt('#m-progress'), wrong: d.querySelectorAll('.u.is-wrong').length, cur: head(1) });
+
+      // 5 无限模式
+      mode('endless');
+      var n0 = d.querySelectorAll('.u').length;
+      var p0 = txt('#m-progress');
+      say({ t: 'endless-init', units: n0, prog: p0 });
+
+      // 连打 60 个正确字母，看是否自动续批
+      var k = 0;
+      var iv = setInterval(function () {
+        var cur = d.querySelector('.u.is-cur');
+        if (!cur || k++ > 300) { clearInterval(iv); return; }
+        var py = cur.querySelector('.py').textContent || '';
+        var dn = cur.querySelector('.py .done');
+        var rem = py.slice(dn ? dn.textContent.length : 0);
+        if (!rem) { clearInterval(iv); return; }
+        key(rem[0]);
+        if (k % 40 === 0) {
+          say({ t: 'endless-' + k, units: d.querySelectorAll('.u').length, prog: txt('#m-progress') });
+        }
+        if (k >= 200) clearInterval(iv);
+      }, 12);
+
+      setTimeout(function () {
+        say({ t: 'endless-end', units: d.querySelectorAll('.u').length, prog: txt('#m-progress'), stillHasCur: !!d.querySelector('.u.is-cur'), finished: txt('#btn-pause') });
+      }, 5000);
+    }, 200);
+  }, 400);
+});
+</script>
+</body></html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2f1ed">
+<title>打字网 · 拼音打字练习</title>
+<meta name="description" content="在线中文拼音打字练习：单字、词语、文章三级跟打，逐字母判定，实时速度与正确率。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <span class="brand-mark">打</span>
+    <span class="brand-name">打字网</span>
+  </div>
+
+  <div class="meters">
+    <div class="meter"><b id="m-progress">0/0</b><i>进度</i></div>
+    <div class="meter"><b id="m-speed">0</b><i>字/分</i></div>
+    <div class="meter"><b id="m-acc">100<i class="pct">%</i></b><i>正确率</i></div>
+    <div class="meter"><b id="m-time">0:00</b><i>用时</i></div>
+  </div>
+
+  <div class="tools">
+    <button id="btn-pause" class="tool" type="button">暂停</button>
+    <button id="btn-redo" class="tool" type="button">重来</button>
+    <button id="btn-next" class="tool" type="button">下一组</button>
+    <button id="btn-sound" class="tool icon" type="button" aria-label="音效开关" aria-pressed="true">♪</button>
+    <button id="btn-theme" class="tool icon" type="button" aria-label="切换主题">◐</button>
+  </div>
+</header>
+
+<nav class="modes" role="tablist" aria-label="练习模式">
+  <button class="mode is-on" data-mode="char" role="tab" aria-selected="true">单字</button>
+  <button class="mode" data-mode="word" role="tab" aria-selected="false">词语</button>
+  <button class="mode" data-mode="word4" role="tab" aria-selected="false">四字</button>
+  <button class="mode" data-mode="article" role="tab" aria-selected="false">文章</button>
+  <button class="mode" data-mode="endless" role="tab" aria-selected="false">无限</button>
+  <span class="mode-hint" id="mode-hint">随机取 40 个常用字</span>
+</nav>
+
+<main class="stage">
+  <div class="paper" id="paper" tabindex="0" aria-label="练习区，直接开始打字">
+    <div class="lines" id="lines"></div>
+    <p class="tip" id="tip">敲下任意字母开始计时</p>
+  </div>
+
+  <aside class="side" id="side">
+    <div class="side-head">
+      <span>最近成绩</span>
+      <button id="btn-clear-rec" class="mini" type="button">清空</button>
+    </div>
+    <svg class="spark" id="spark" viewBox="0 0 260 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <ul class="reclist" id="reclist"></ul>
+  </aside>
+</main>
+
+<section class="kbdwrap">
+  <div class="kbd" id="kbd"></div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data/chars.js"></script>
+<script src="data/words.js"></script>
+<script src="data/idioms.js"></script>
+<script src="data/articles.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

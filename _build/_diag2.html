@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>css</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<script>localStorage.setItem('dazi.theme', '"dark"');</script>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+document.getElementById('f').addEventListener('load', function () {
+  setTimeout(function () {
+    var d = document.getElementById('f').contentDocument;
+    var w = document.getElementById('f').contentWindow;
+    function cs(sel, prop) {
+      var e = d.querySelector(sel);
+      return e ? w.getComputedStyle(e)[prop] : 'NO-EL';
+    }
+    var o = {
+      theme: d.documentElement.getAttribute('data-theme'),
+      ink: w.getComputedStyle(d.documentElement).getPropertyValue('--ink').trim(),
+      meterColor: cs('.meter b', 'color'),
+      brandColor: cs('.brand-name', 'color'),
+      barBg: cs('.bar', 'backgroundColor'),
+      memoColor: cs('#m-progress', 'color'),
+      hzColor: cs('.u .hz', 'color'),
+      toolColor: cs('.tool', 'color'),
+      bodyColor: cs('body', 'color'),
+      bodyBg: cs('body', 'backgroundColor')
+    };
+    document.getElementById('out').textContent = 'CSS ' + JSON.stringify(o);
+  }, 700);
+});
+</script>
+</body></html>

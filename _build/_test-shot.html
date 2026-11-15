@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>shot</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<script>
+  var th = location.search.indexOf('light') >= 0 ? 'light' : 'dark';
+  localStorage.setItem('dazi.theme', JSON.stringify(th));
+</script>
+<iframe id="f" src="../index.html"></iframe>
+<script>
+/* 构造"打错一个字母"的画面：先打对两个，第三个故意打错，停在第四个 */
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f');
+  setTimeout(function () {
+    var d = f.contentDocument;
+    function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+    function curLetter() {
+      var c = d.querySelector('.u.is-cur .py .cur');
+      return c ? c.textContent : null;
+    }
+    // 先打对两个字
+    var n = 0;
+    while (n < 5) {
+      var k1 = curLetter();
+      if (!k1) break;
+      key(k1);
+      n++;
+    }
+    // 第三个字母故意打错
+    var k2 = curLetter();
+    if (k2) key(k2 === 'a' ? 'z' : 'a');
+    // 再打一个正确的，让光标往前走一格
+    var k3 = curLetter();
+    if (k3) key(k3);
+  }, 400);
+});
+</script>
+</body></html>

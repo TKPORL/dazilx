@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>typo</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'TYPO ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), d;
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+  // 当前字的状态快照
+  function st() {
+    var cur = d.querySelector('.u.is-cur');
+    if (!cur) return { none: true };
+    var py = cur.querySelector('.py');
+    var hz = cur.querySelector('.hz').textContent;
+    var curLetter = py.querySelector('.cur');
+    var bads = Array.prototype.map.call(py.querySelectorAll('.bad'), function (e) { return e.textContent; }).join('');
+    var dones = Array.prototype.map.call(py.querySelectorAll('.done'), function (e) { return e.textContent; }).join('');
+    return {
+      hz: hz,
+      full: py.textContent,
+      at: curLetter ? curLetter.textContent : '-',
+      done: dones,
+      bad: bads,
+      prog: d.getElementById('m-progress').textContent,
+      acc: d.getElementById('m-acc').textContent,
+      wrongChars: d.querySelectorAll('.u.is-wrong').length
+    };
+  }
+  function wrongLetter(k) { return k === 'a' ? 'z' : 'a'; }
+
+  setTimeout(function () {
+    d = f.contentDocument;
+    say({ t: 'start', s: st() });
+
+    // --- 场景1：第一个字母打错，应只前进一个字母，不跳字 ---
+    var s0 = st();
+    key(wrongLetter(s0.at));          // 故意打错第一个字母
+    var s1 = st();
+    say({ t: 'one-wrong', before: s0.at, after: s1.at, sameChar: s0.hz === s1.hz, bad: s1.bad, prog: s1.prog, acc: s1.acc });
+
+    // --- 场景2：接着把这个字剩下字母打完 ---
+    var guard = 0;
+    while (guard++ < 20) {
+      var c = st();
+      if (!c.at || c.at === '-') break;
+      // 故意每个都打错，验证错字也能走完
+      key(wrongLetter(c.at));
+    }
+    var s2 = st();
+    say({ t: 'finish-with-errors', wrongChars: s2.wrongChars, prog: s2.prog, acc: s2.acc });
+
+    // --- 场景3：下一个字先打错再退格重打对，红标应消失 ---
+    var s3 = st();
+    var firstLetter = s3.full.charAt(0);
+    key(wrongLetter(firstLetter));     // 错
+    var s4 = st();
+    key('Backspace');                   // 退格
+    var s5 = st();
+    key(firstLetter);                   // 重打正确
+    var s6 = st();
+    say({ t: 'backspace-redo', afterWrong: s4.bad, afterUndo: s5.bad, afterRedo: s6.bad, at: s6.at });
+
+    // --- 场景4：一口气打对一整组，不该出现任何 is-wrong ---
+    d.getElementById('btn-redo').click();
+    var g2 = 0;
+    while (g2++ < 400) {
+      var cur = d.querySelector('.u.is-cur');
+      if (!cur) break;
+      var py = cur.querySelector('.py');
+      var cn = py.querySelector('.cur');
+      if (!cn) break;
+      key(cn.textContent);
+    }
+    say({ t: 'clean-run', prog: d.getElementById('m-progress').textContent, wrongChars: d.querySelectorAll('.u.is-wrong').length, acc: d.getElementById('m-acc').textContent });
+  }, 400);
+});
+</script>
+</body></html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>autotype</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#222}
+  iframe{width:100%;height:100%;border:0;display:block}
+</style>
+</head>
+<body>
+<iframe id="f" src="../index.html"></iframe>
+<script>
+/* 开发用：自动敲一串按键，用来验证判定 / 统计 / 高亮是否正常 */
+(function () {
+  var f = document.getElementById('f');
+  var SEQ = ['a', 'a', 'i', 'a', 'i', 'b', 'a', 'z', 'z', 'a', 'i', 'b', 'a', 'i'];
+  f.addEventListener('load', function () {
+    var w = f.contentWindow;
+    var i = 0;
+    setTimeout(function () {
+      var t = setInterval(function () {
+        if (i >= SEQ.length) {
+          clearInterval(t);
+          var doc = w.document;
+          var out = {
+            progress: doc.getElementById('m-progress').textContent,
+            speed: doc.getElementById('m-speed').textContent,
+            acc: doc.getElementById('m-acc').textContent,
+            time: doc.getElementById('m-time').textContent,
+            cur: (doc.querySelector('.u.is-cur .hz') || {}).textContent || 'none',
+            done: doc.querySelectorAll('.u.is-done').length,
+            nextKey: (doc.querySelector('.key.is-next') || {}).textContent || 'none',
+            errors: doc.querySelectorAll('.u.is-miss').length
+          };
+          document.title = 'RESULT ' + JSON.stringify(out);
+          return;
+        }
+        var ch = SEQ[i++];
+        w.document.dispatchEvent(new KeyboardEvent('keydown', { key: ch, bubbles: true, cancelable: true }));
+      }, 70);
+    }, 350);
+  });
+})();
+</script>
+</body>
+</html>

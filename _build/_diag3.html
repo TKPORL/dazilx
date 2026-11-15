@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>d3</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f');
+  setTimeout(function () {
+    var d = f.contentDocument;
+    function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+    function curL() { var c = d.querySelector('.u.is-cur .py .cur'); return c ? c.textContent : null; }
+    // 打对 8 个字母（大概 3 个字）
+    var n = 0;
+    while (n < 8) { var k = curL(); if (!k) break; key(k); n++; }
+    // 打错一个
+    var k2 = curL(); if (k2) key(k2 === 'a' ? 'z' : 'a');
+    setTimeout(function () {
+      var rows = [];
+      var us = d.querySelectorAll('.u');
+      for (var i = 0; i < Math.min(5, us.length); i++) {
+        var u = us[i];
+        rows.push({
+          hz: u.querySelector('.hz').textContent,
+          cls: u.className,
+          py: u.querySelector('.py').innerHTML.replace(/<em class="([a-z ]*)">/g, '[$1]').replace(/<em>/g, '[.]').replace(/<\/em>/g, '')
+        });
+      }
+      document.getElementById('out').textContent = 'D3 ' + JSON.stringify(rows);
+    }, 120);
+  }, 400);
+});
+</script>
+</body></html>

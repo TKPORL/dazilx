@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>full</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var OUT = [];
+function say(o) { OUT.push(o); document.getElementById('out').textContent = 'FULL ' + JSON.stringify(OUT); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), doc, guard = 0, stopped = false;
+
+  function snap(tag) {
+    say({
+      tag: tag,
+      prog: doc.getElementById('m-progress').textContent,
+      sp: doc.getElementById('m-speed').textContent,
+      acc: doc.getElementById('m-acc').textContent,
+      recs: doc.querySelectorAll('#reclist li:not(.empty)').length,
+      units: doc.querySelectorAll('.u').length,
+      done: doc.querySelectorAll('.u.is-done').length,
+      spark: doc.querySelectorAll('#spark path').length,
+      hint: doc.querySelector('#mode-hint').textContent.slice(0, 30),
+      paused: doc.getElementById('btn-pause').textContent
+    });
+  }
+
+  function finish(tag) {
+    stopped = true;
+    snap(tag);
+    setTimeout(function () { snap('AFTER'); }, 1400);
+  }
+
+  function step() {
+    if (stopped) return;
+    if (guard++ > 500) { finish('GUARD'); return; }
+    var cur = doc.querySelector('.u.is-cur');
+    if (!cur) { finish('NO-CUR'); return; }
+    var py = cur.querySelector('.py').textContent || '';
+    var d = cur.querySelector('.py .done');
+    var remain = py.slice(d ? d.textContent.length : 0);
+    if (!remain) { finish('NO-REMAIN'); return; }
+    for (var k = 0; k < remain.length; k++) {
+      doc.dispatchEvent(new KeyboardEvent('keydown', { key: remain[k], bubbles: true, cancelable: true }));
+    }
+    setTimeout(step, 25);
+  }
+
+  setTimeout(function () {
+    try {
+      doc = f.contentDocument;
+      say({ tag: 'START', chars: f.contentWindow.DAZI_CHARS ? f.contentWindow.DAZI_CHARS.length : -1 });
+      snap('INIT');
+      step();
+    } catch (e) { say({ ERR: String(e) }); }
+  }, 300);
+});
+</script>
+</body></html>

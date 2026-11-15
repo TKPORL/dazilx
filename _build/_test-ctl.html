@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>ctl</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'CTL ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f');
+  var d = f.contentDocument;
+
+  function txt(sel) { var e = d.querySelector(sel); return e ? e.textContent : ''; }
+  function firstChars(n) {
+    return Array.prototype.slice.call(d.querySelectorAll('.u .hz')).slice(0, n).map(function (e) { return e.textContent; }).join('');
+  }
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+
+  setTimeout(function () {
+    var before = firstChars(6);
+    say({ t: 'init', prog: txt('#m-progress'), cur: firstChars(1), head: before });
+
+    // 打 3 个 a（前三个字的拼音都是 a）
+    key('a'); key('a'); key('a');
+    say({ t: 'after3', prog: txt('#m-progress'), done: d.querySelectorAll('.u.is-done').length, acc: txt('#m-acc') });
+
+    // 点重来
+    d.getElementById('btn-redo').click();
+    say({ t: 'redo', prog: txt('#m-progress'), done: d.querySelectorAll('.u.is-done').length, head: firstChars(6), same: firstChars(6) === before });
+
+    // 打错一个键
+    key('z');
+    say({ t: 'miss', prog: txt('#m-progress'), acc: txt('#m-acc'), miss: d.querySelectorAll('.u.is-miss').length });
+
+    // 暂停 / 继续
+    d.getElementById('btn-pause').click();
+    var p1 = txt('#btn-pause');
+    d.getElementById('btn-pause').click();
+    var p2 = txt('#btn-pause');
+    say({ t: 'pause', pause: p1, resume: p2 });
+
+    // 切到词语
+    d.querySelector('.mode[data-mode="word"]').click();
+    say({ t: 'word', prog: txt('#m-progress'), units: d.querySelectorAll('.u').length, groups: d.querySelectorAll('.w').length });
+
+    // 切到文章
+    d.querySelector('.mode[data-mode="article"]').click();
+    say({ t: 'article', prog: txt('#m-progress'), units: d.querySelectorAll('.u').length, punct: d.querySelectorAll('.u.is-punct').length, hint: txt('#mode-hint').slice(0, 26) });
+
+    // 主题切换
+    var t0 = d.documentElement.getAttribute('data-theme');
+    d.getElementById('btn-theme').click();
+    var t1 = d.documentElement.getAttribute('data-theme');
+    say({ t: 'theme', from: t0, to: t1 });
+  }, 400);
+});
+</script>
+</body></html>
