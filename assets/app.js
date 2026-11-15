@@ -670,7 +670,7 @@
   }
 
   /* ---------------- 绑定 ---------------- */
-  var TIP_START = window.matchMedia('(max-width:820px)').matches
+  var TIP_START = window.matchMedia('(max-width:640px)').matches
     ? '建议在电脑上练习；手机端没有物理键盘，无法跟打'
     : '敲下任意字母开始计时 · Esc 重来';
 
