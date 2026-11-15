@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>red</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:0;display:block}</style>
+</head><body>
+<iframe id="f" src="../index.html"></iframe>
+<pre id="out" style="display:none"></pre>
+<script>
+var R = [];
+function say(o) { R.push(o); document.getElementById('out').textContent = 'RED ' + JSON.stringify(R); }
+window.onerror = function (m, s, l) { say({ ERR: String(m) + ' @' + l }); };
+
+document.getElementById('f').addEventListener('load', function () {
+  var f = document.getElementById('f'), d;
+  function key(k) { d.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); }
+  function curL() { var c = d.querySelector('.u.is-cur .py .cur'); return c ? c.textContent : null; }
+  function badIn(i) {
+    var u = d.querySelectorAll('.u')[i];
+    if (!u) return '无';
+    return Array.prototype.map.call(u.querySelectorAll('.py .bad'), function (e) { return e.textContent; }).join('');
+  }
+  function cls(i) { var u = d.querySelectorAll('.u')[i]; return u ? u.className : '无'; }
+
+  function run() {
+    // 1. 第一个字故意打错第一字母，再把剩下的打完
+    var first = curL();
+    key(first === 'a' ? 'z' : 'a');
+    var g = 0;
+    while (g++ < 10) {
+      var c = curL();
+      if (!c) break;
+      // 判断是否还在第一个字（用 is-cur 的索引）
+      if (d.querySelectorAll('.u.is-cur').length === 0) break;
+      if (d.querySelectorAll('.u.is-done, .u.is-wrong').length >= 1) break;
+      key(c);
+    }
+    say({ t: 'first-char-done', cls0: cls(0), bad0: badIn(0), prog: d.getElementById('m-progress').textContent });
+
+    // 2. 第二个字打一个字母
+    var c2 = curL();
+    if (c2) key(c2);
+    say({ t: 'second-started', cls0: cls(0), bad0: badIn(0), curIdx: Array.prototype.indexOf.call(d.querySelectorAll('.u'), d.querySelector('.u.is-cur')) });
+
+    // 3. 退格：跨字回到第一个字
+    key('Backspace');
+    say({ t: 'after-backspace-1', cls0: cls(0), bad0: badIn(0), curIdx: Array.prototype.indexOf.call(d.querySelectorAll('.u'), d.querySelector('.u.is-cur')) });
+
+    // 4. 再退格：字内退一格
+    key('Backspace');
+    say({ t: 'after-backspace-2', cls0: cls(0), bad0: badIn(0) });
+  }
+
+  setTimeout(function () { d = f.contentDocument; run(); }, 400);
+});
+</script>
+</body></html>

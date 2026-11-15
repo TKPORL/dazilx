@@ -401,12 +401,11 @@
     press(e.key.toLowerCase());
   }
 
-  // 删掉一个字母的同时，把它身上记的"打过错"也一起清掉，
-  // 不然字母都删了还留着红标，看着像没删干净
-  function clearErrAt(it, pos) {
-    if (!it || !it.errs || !it.errs.length) return;
-    var k = it.errs.indexOf(pos);
-    if (k >= 0) it.errs.splice(k, 1);
+  // 退格就当作"这个字重新打"，整字的红标一次清干净。
+  // 只清被删的那一格不够——用户从下一个字退回来时，光标落在末尾，
+  // 前面打错过的字母还红着，看起来就像没删掉。
+  function clearErr(it) {
+    if (it && it.errs) it.errs.length = 0;
   }
 
   // 退格：拼音是连成一串的，一个字删到开头会接着删上一个字的末尾
@@ -415,7 +414,7 @@
 
     if (S.pos > 0) {
       S.pos--;
-      clearErrAt(S.items[S.idx], S.pos);
+      clearErr(S.items[S.idx]);
       paintUnit(S.idx);
       paintNextKey();
       renderMeters();
@@ -430,7 +429,7 @@
     S.doneChar--;
     S.idx = i;
     S.pos = S.items[i].p.length - 1;   // 光标落在最后一个字母上，等于把它删掉
-    clearErrAt(S.items[i], S.pos);
+    clearErr(S.items[i]);
 
     markCur();
     paintUnit(i);
